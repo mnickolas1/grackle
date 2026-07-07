@@ -32,7 +32,7 @@
      &                gammaha_eff, gasgr_tdust, regr,
      &                iradshield, avgsighi, avgsighei,
      &                avgsigheii,
-     &                k24, k26, iradtrans, photogamma,
+     &                k24, k26, iradtrans, photogammaHI, photogammaHeI, photogammaHeII,
      &                ih2optical, iciecool, ciecoa, cieco,
      &                icmbTfloor, iClHeat, clEleFra,
      &                priGridRank, priGridDim,
@@ -89,7 +89,8 @@
      &        DI(in,jn,kn),  DII(in,jn,kn), HDI(in,jn,kn),
      &        metal(in,jn,kn), dust(in,jn,kn),
      &        Vheat(in,jn,kn), Mheat(in,jn,kn), Tfloor(in,jn,kn),
-     &        photogamma(in,jn,kn), isrf_habing(in,jn,kn)
+     &        photogammaHI(in,jn,kn), photogammaHeI(in,jn,kn), photogammaHeII(in,jn,kn), 
+     &        isrf_habing(in,jn,kn)
       real*8  hyd01ka(nratec), h2k01a(nratec), vibha(nratec), 
      &        rotha(nratec), rotla(nratec), gpldla(nratec),
      &        gphdla(nratec), hdltea(nratec), hdlowa(nratec),
@@ -1068,16 +1069,20 @@ c  new (correct) way: (april 4, 2007)
       if (iradtrans .eq. 1) then
           do i = is + 1, ie + 1
             if (itmask(i)) then
-              edot(i) = edot(i) + real(ipiht, DKIND) * photogamma(i,j,k)
+              edot(i) = edot(i) + real(ipiht, DKIND) * photogammaHI(i,j,k)
      &                          / coolunit * HI(i,j,k) / dom
+     &                          + real(ipiht, DKIND) * photogammaHeI(i,j,k)
+     &                          / coolunit * HeI(i,j,k) / 4.0_DKIND / dom
+     &                          + real(ipiht, DKIND) * photogammaHeII(i,j,k)
+     &                          / coolunit * HeII(i,j,k) / 4.0_DKIND / dom
 
               if (edot(i) .ne. edot(i)) then
 #ifdef _OPENMP
 !$omp critical
 #endif
                   write(6,*) 'NaN in edot[2]: ', i,j,k, edot(i),
-     &                photogamma(i,j,k), HI(i,j,k), de(i,j,k), d(i,j,k),
-     &                e(i,j,k), p2d(i), tgas(i), dom, urho, aye, mh
+     &                photogammaHI(i,j,k), photogammaHeI(i,j,k), photogammaHeII(i,j,k), 
+     &                HI(i,j,k), de(i,j,k), d(i,j,k), e(i,j,k), p2d(i), tgas(i), dom, urho, aye, mh
 #ifdef _OPENMP
 !$omp end critical
 #endif
