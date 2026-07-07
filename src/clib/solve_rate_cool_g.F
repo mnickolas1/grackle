@@ -493,7 +493,7 @@
      &                gammaha_eff, gasgr_tdust, regr,
      &                iradshield, avgsighi, avgsighei, avgsigheii,
      &                k24, k26,
-     &                iradtrans, photogammaHI, photogammaHeI, photogammaHeII,
+     &                iradtrans, irt_honly, photogammaHI, photogammaHeI, photogammaHeII,
      &                ih2optical, iciecool, ciecoa, cieco,
      &                icmbTfloor, iClHeat, clEleFra,
      &                priGridRank, priGridDim,
