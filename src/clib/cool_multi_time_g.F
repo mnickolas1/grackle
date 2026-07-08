@@ -22,7 +22,8 @@
      &                gaHIa, gaH2a, gaHea, gaHpa, gaela,
      &                h2ltea, gasgra,
      &                iradshield, avgsighi, avgsighei, avgsigheii,
-     &                k24, k26, iradtrans, photogammaHI, photogammaHeI, photogammaHeII,
+     &                k24, k26, 
+     &                iradtrans, irt_honly, photogammaHI, photogammaHeI, photogammaHeII,
      &                ih2optical, iciecool, ciecoa, 
      &                icmbTfloor, iClHeat, clEleFra,
      &                priGridRank, priGridDim,
@@ -65,7 +66,7 @@
      &        iexpand, ih2co, ipiht, ispecies, imetal, idim,
      &        imcool, idust, idustall,
      &        idustfield, idustrec, igammah, ih2optical, iciecool,
-     &        clnew, iVheat, iMheat, iTfloor, iradtrans, iradshield,
+     &        clnew, iVheat, iMheat, iTfloor, iradtrans, irt_honly, iradshield,
      &        iisrffield
 
       real*8  aye, temstart, temend,
