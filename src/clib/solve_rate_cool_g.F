@@ -1398,103 +1398,106 @@ c -------------------------------------------------------------------
       enddo
 
 !
-!     H2 self-shielding (Sobolev-like, spherically averaged, Wolcott-Green+ 2011)
+!     Only self_shield UV
 !
 
       if (ispecies .gt. 1) then
-      if (iradtrans == 0) then
          do i = is+1, ie+1
             if (itmask(i)) then
                k31shield(i) = k31
             endif 
          enddo
-      else
-         do i = is+1, ie+1
-            if (itmask(i)) then
-               k31shield(i) = k31 + kdissH2I(i,j,k)
-            endif
-         enddo
 
-      endif
+         if (iH2shield .gt. 0) then
+            do i = is+1, ie+1
+               if (itmask(i)) then
 
-      if (iH2shield .gt. 0) then
-         do i = is+1, ie+1
-            if (itmask(i)) then
+!                 Calculate a Sobolev-like length assuming a 3D grid.
+                  if (iH2shield == 1) then
 
-!              Calculate a Sobolev-like length assuming a 3D grid.
-               if (iH2shield == 1) then
+                  divrhoa(1) = d(i+1, j  , k  ) - d(i,j,k)
+                  divrhoa(2) = d(i-1, j  , k  ) - d(i,j,k)
+                  divrhoa(3) = d(i  , j+1, k  ) - d(i,j,k)
+                  divrhoa(4) = d(i  , j-1, k  ) - d(i,j,k)
+                  divrhoa(5) = d(i  , j  , k+1) - d(i,j,k)
+                  divrhoa(6) = d(i  , j  , k-1) - d(i,j,k)
+                  divrho = tiny
+!                 Exclude directions with (drho/ds > 0)
+                  do n1 = 1, 6
+                     if (divrhoa(n1) .lt. 0._DKIND) then
+                        divrho = divrho + divrhoa(n1)
+                     endif
+                  enddo
+!                 (rho / divrho) is the Sobolev-like length 
+!                 in cell widths
+                  l_H2shield = min(dx_cgs * d(i,j,k) /
+     &               (2._DKIND * abs(divrho)), xbase1)
 
-               divrhoa(1) = d(i+1, j  , k  ) - d(i,j,k)
-               divrhoa(2) = d(i-1, j  , k  ) - d(i,j,k)
-               divrhoa(3) = d(i  , j+1, k  ) - d(i,j,k)
-               divrhoa(4) = d(i  , j-1, k  ) - d(i,j,k)
-               divrhoa(5) = d(i  , j  , k+1) - d(i,j,k)
-               divrhoa(6) = d(i  , j  , k-1) - d(i,j,k)
-               divrho = tiny
-!              Exclude directions with (drho/ds > 0)
-               do n1 = 1, 6
-                  if (divrhoa(n1) .lt. 0._DKIND) then
-                     divrho = divrho + divrhoa(n1)
+!                 User-supplied length-scale field.
+                  else if (iH2shield == 2) then
+                     l_H2shield = xH2shield(i,j,k) * uxyz
+
+!                 Jeans Length
+                  else if (iH2shield == 3) then
+                     l_H2shield = c_ljeans *
+     &                    sqrt(tgas1d(i) / (d(i,j,k) * mmw(i)))
+
+                  else
+                     l_H2shield = 0._RKIND
                   endif
-               enddo
-!              (rho / divrho) is the Sobolev-like length in cell widths
-               l_H2shield = min(dx_cgs * d(i,j,k) /
-     & (2._DKIND * abs(divrho)), xbase1)
 
-!              User-supplied length-scale field.
-               else if (iH2shield == 2) then
-                  l_H2shield = xH2shield(i,j,k) * uxyz
+                  N_H2 = dom*H2I(i,j,k) * l_H2shield
 
-!              Jeans Length
-               else if (iH2shield == 3) then
-                  l_H2shield = c_ljeans *
-     &                 sqrt(tgas1d(i) / (d(i,j,k) * mmw(i)))
+!                 Self-shielding 
+!                 following Wolcott-Green & Haiman(2019)
+!                 range of validity: T=100-8000 K, n<=1e7 cm^-3
 
-               else
-                  l_H2shield = 0._RKIND
-               endif
+                  tgas_touse = max(tgas1d(i),1E2_DKIND)
+                  tgas_touse = min(tgas_touse,8E3_DKIND)
+                  ngas_touse = d(i,j,k) * dom / mmw(i)
+                  ngas_touse = min(ngas_touse,1E7_DKIND)
 
-               N_H2 = dom*H2I(i,j,k) * l_H2shield
-
-! update: self-shielding following Wolcott-Green & Haiman (2019)
-! range of validity: T=100-8000 K, n<=1e7 cm^-3
-
-               tgas_touse = max(tgas1d(i),1E2_DKIND)
-               tgas_touse = min(tgas_touse,8E3_DKIND)
-               ngas_touse = d(i,j,k) * dom / mmw(i)
-               ngas_touse = min(ngas_touse,1E7_DKIND)
-
-               aWG2019 = (0.8711_DKIND *
+                  aWG2019 = (0.8711_DKIND *
      &              log10(tgas_touse) - 1.928_DKIND) *
      &              exp(-0.2856_DKIND * log10(ngas_touse)) +
      &              (-0.9639_DKIND * log10(tgas_touse) + 3.892_DKIND)
 
-               x = 2.0E-15_DKIND * N_H2
-               b_doppler = 1E-5_DKIND *
-     &                 sqrt(2._DKIND * kboltz *
-     &                      tgas1d(i) / (2._DKIND * mass_h))
-               f_shield = 0.965_DKIND /
-     &              (1._DKIND + x/b_doppler)**aWG2019 +
-     &              0.035_DKIND * exp(-8.5e-4_DKIND *
-     &              sqrt(1._DKIND + x)) /
-     &              sqrt(1._DKIND + x)
+                  x = 2.0E-15_DKIND * N_H2
+                  b_doppler = 1E-5_DKIND *
+     &                    sqrt(2._DKIND * kboltz *
+     &                         tgas1d(i) / (2._DKIND * mass_h))
+                  f_shield = 0.965_DKIND /
+     &                 (1._DKIND + x/b_doppler)**aWG2019 +
+     &                 0.035_DKIND * exp(-8.5e-4_DKIND *
+     &                 sqrt(1._DKIND + x)) /
+     &                 sqrt(1._DKIND + x)
 
-! avoid f>1
-               f_shield = min(f_shield, 1._DKIND)
+!                 avoid f>1
+                  f_shield = min(f_shield, 1._DKIND)
 
-               k31shield(i) = f_shield * k31shield(i)
-            endif
-         enddo
-      endif
+                  k31shield(i) = f_shield * k31shield(i)
+               endif
+            enddo
+         endif
 
-!     Custom H2 shielding
-      if (iH2shieldcustom .gt. 0) then
-        do i = is+1, ie+1
-            if (itmask(i)) then
-              k31shield(i) = f_shield_custom(i,j,k) * k31shield(i)
-            endif
-        enddo
-      endif
+!        Custom H2 shielding
+         if (iH2shieldcustom .gt. 0) then
+            do i = is+1, ie+1
+               if (itmask(i)) then
+                  k31shield(i) = f_shield_custom(i,j,k) * k31shield(i)
+               endif
+            enddo
+         endif
+
+!        RT dissociation rate is already shielded,  
+!        so add it after the approximate shielding factors.
+         if (iradtrans .eq. 1) then
+            do i = is+1, ie+1
+               if (itmask(i)) then
+                  k31shield(i) = k31shield(i) + kdissH2I(i,j,k)
+               endif
+            enddo
+         endif
       endif
 
       if (iradshield > 0) then
@@ -1940,8 +1943,8 @@ c
 !       to its H2 formation heating, so this is fully consistent.
 !       (n_crit fits from ncrn/ncrd1/ncrd2 tables).
 !        
-!       k31shield is already mutliplied by F_DISS in the RT in arepo_solas.
-!       f_diss = 1; f_vibstates = (1 - F_DISS) / F_DISS =  5.66 for F_DISS = 0.15;
+!       k31shield is already multiplied by F_DISS in the RT in arepo_solas.
+!       f_vibstates = (1 - F_DISS) / F_DISS =  5.66 for F_DISS = 0.15;
 !       this F_DISS needs to be consistent with arepo_solas/../star_radiation.h.
 !       
 !       k31shield is pre-shielded in the RT in arepo_solas so do not double shield.
