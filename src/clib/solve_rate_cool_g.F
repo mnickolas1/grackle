@@ -1928,6 +1928,27 @@ c
 !     &       + H2I(i,j,k)*( k21(i) * HI(i,j,k)**2.0_DKIND
 !     &                    - k23(i) * H2I(i,j,k))
 !H * (k22 * H^2 - k13 * H_2) + H_2 * (k21 * H^2 - k23 * H_2) */
+
+!     H2 photo-dissociation heating
+!       Kim+ 2023, Hollenbach & McKee 1979, Baczynski+ 2015
+!       Per dissociation event:
+!       0.4 * f_diss eV (direct dissociation, always thermalized)
+!       + 2 * f_vibstates eV * n/(n + n_crit) (UV pumping cascade,
+!       thermalized fraction grows with density).
+!       Re-using h2heatfac (= n/(n+n_crit) from Omukai 2000) above,
+!       which is the same critical-density factor Grackle applies
+!       to its H2 formation heating, so this is fully consistent.
+!       (n_crit fits from ncrn/ncrd1/ncrd2 tables).
+!        
+!       k31shield is already mutliplied by F_DISS in the RT in arepo_solas.
+!       f_diss = 1; f_vibstates = (1 - F_DISS) / F_DISS =  5.66 for F_DISS = 0.15;
+!       this F_DISS needs to be consistent with arepo_solas/../star_radiation.h.
+!       
+!       k31shield is pre-shielded in the RT in arepo_solas so do not double shield.
+
+            edot(i) = edot(i) + chunit *
+     &           (0.4_DKIND + 11.33_DKIND * h2heatfac(i)) *
+     &           k31shield(i) * H2I(i,j,k) * 0.5_DKIND
          endif                  ! itmask
          enddo
       endif
