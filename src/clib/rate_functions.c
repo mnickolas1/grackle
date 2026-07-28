@@ -97,33 +97,7 @@ double k4_rate(double T, double units, chemistry_data *my_chemistry)
 //Calculation of k2 (HII + e --> HI + photon)
 double k2_rate(double T, double units, chemistry_data *my_chemistry)
 {
-    if (my_chemistry->CaseBRecombination == 1) {
-        if (T < 1.0e9) {
-            return 4.881357e-6*pow(T, -1.5) \
-                * pow((1.0 + 1.14813e2*pow(T, -0.407)), -2.242) / units;
-        } else {
-            return tiny;
-        }  
-    } else {
-        if (T > 5500) {
-            //Convert temperature to appropriate form.
-            double T_ev = T / tevk;
-            double logT_ev = log(T_ev);
-
-            return exp( -28.61303380689232 \
-                - 0.7241125657826851*logT_ev \
-                - 0.02026044731984691*pow(logT_ev, 2) \
-                - 0.002380861877349834*pow(logT_ev, 3) \
-                - 0.0003212605213188796*pow(logT_ev, 4) \
-                - 0.00001421502914054107*pow(logT_ev, 5) \
-                + 4.989108920299513e-6*pow(logT_ev, 6) \
-                + 5.755614137575758e-7*pow(logT_ev, 7) \
-                - 1.856767039775261e-8*pow(logT_ev, 8) \
-                - 3.071135243196595e-9*pow(logT_ev, 9)) / units;
-        } else {
-            return k4_rate(T, units, my_chemistry);
-        }
-    }
+  return 2.59e-13 / units;   // Fervent: fixed alpha_B, case-B at 1e4 K
 }
 
 //Calculation of k5 (HeII + e --> HeIII + 2e)
