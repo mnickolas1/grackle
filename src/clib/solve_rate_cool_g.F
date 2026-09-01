@@ -12,7 +12,8 @@
      &                igammah,
      &                dx, dt, aye, temstart, temend, 
      &                utem, uxyz, uaye, urho, utim,
-     &                gamma, fh, dtoh, z_solar, fgr,
+     &                gamma, fh, dtoh, ifhfield, fhfield, dtohfield,
+     &                z_solar, fgr,
      &                k1a, k2a, k3a, k4a, k5a, k6a, k7a, k8a, k9a, k10a,
      &                k11a, k12a, k13a, k13dda, k14a, k15a,
      &                k16a, k17a, k18a, k19a, k22a,
@@ -108,9 +109,17 @@
 !    iradstep  - flag to indicate intermediate coupled radiative transfer timestep
 !    irt_honly - flag to indicate applying RT ionization and heating to HI only
 !    iH2shieldcustom - flag to indicate a custom H2 shielding factor is provided
-
-!    fh       - Hydrogen mass fraction (typically 0.76)
+ 
+!    fh       - Hydrogen mass fraction (typically 0.76) 
+!               Only used when ifhfield is 0
+!    dtoh     - Deuterium to H mass ratio 
+!               Only used when ifhfield is 0
+!    ifhfield - flag indicating that per-cell hydrogen mass fraction and
+!               deuterium-to-hydrogen mass ratio fields are supplied
+!    fhfield  - per-cell hydrogen mass fraction (used when ifhfield is 1)
+!    dtohfield - per-cell deuterium to H mass ratio (used when ifhfield is 1)
 !    dtoh     - Deuterium to H mass ratio
+!                                         
 !    z_solar  - Solar metal mass fraction
 !    fgr      - the local dust to gas ratio (by mass)
 !    dt       - timestep to integrate over
@@ -171,7 +180,7 @@
       integer icool, in, jn, kn, is, js, ks, ie, je, ke, nratec, 
      &        iexpand, ih2co, ipiht, ispecies, imetal, idim,
      &        ierr, imcool, idust, idustall, idustfield, idustrec,
-     &        igammah, ih2optical, iciecool, ithreebody,
+     &        igammah, ifhfield, ih2optical, iciecool, ithreebody,
      &        ndratec, clnew, iVheat, iMheat, iTfloor,
      &        iH2shield, iradshield,
      &        iradtrans, iradcoupled, iradstep, irt_honly,
@@ -189,6 +198,7 @@
      &        DI(in,jn,kn),  DII(in,jn,kn), HDI(in,jn,kn),
      &        d(in,jn,kn),     e(in,jn,kn),
      &        u(in,jn,kn),    v(in,jn,kn),     w(in,jn,kn),
+     &        fhfield(in,jn,kn), dtohfield(in,jn,kn), 
      &        metal(in,jn,kn), dust(in,jn,kn),
      &        Vheat(in,jn,kn), Mheat(in,jn,kn), Tfloor(in,jn,kn)
 
@@ -279,7 +289,7 @@
       real*8 coolunit, dbase1, tbase1, xbase1, chunit, uvel
       real*8 heq1, heq2, eqk221, eqk222, eqk131, eqk132,
      &       eqt1, eqt2, eqtdef, dheq, heq, dlogtem, dx_cgs,
-     &       c_ljeans
+     &       c_ljeans, myfh
 
 !  row temporaries
 
@@ -378,7 +388,7 @@
 !$omp&   i, j, k, iter,
 !$omp&   ttmin, energy, comp1, comp2,
 !$omp&   heq1, heq2, eqk221, eqk222, eqk131, eqk132,
-!$omp&   eqt1, eqt2, eqtdef, dheq, heq,
+!$omp&   eqt1, eqt2, eqtdef, dheq, heq, myfh,
 !$omp&   indixe,
 !$omp&   t1, t2, logtem, tdef,
 !$omp&   dtit, ttot, p2d, tgas, tgasold,
@@ -599,6 +609,13 @@
                if (d(i,j,k)*dom .gt. 1e8_DKIND .and. 
      &              edot(i) .gt. 0._DKIND      .and.
      &             ispecies .gt. 1) then
+
+               if (ifhfield .gt. 0) then
+                    myfh = fhfield(i,j,k)
+               else
+                    myfh = fh
+               endif
+
 !              Equilibrium value for H is:
 !              H = (-1._DKIND / (4*k22)) * (k13 - sqrt(8 k13 k22 rho + k13^2))
 !              We now want this to change by 10% or less, but we're only
@@ -618,7 +635,7 @@
      &            (k13a(indixe(i)+1) -k13a(indixe(i)))*eqtdef
                 heq2 = (-1._DKIND / (4._DKIND*eqk222)) * (eqk132-
      &               sqrt(8._DKIND*eqk132*eqk222*
-     &               fh*d(i,j,k)+eqk132**2._DKIND))
+     &               myfh*d(i,j,k)+eqk132**2._DKIND))
 
                 eqt1 = max(log(tgas(i)) - 0.1_DKIND*dlogtem, t1(i))
                 eqtdef = (eqt1 - t1(i))/(t2(i) - t1(i))
@@ -628,13 +645,13 @@
      &            (k13a(indixe(i)+1) -k13a(indixe(i)))*eqtdef
                 heq1 = (-1._DKIND / (4._DKIND*eqk221)) * (eqk131-
      &               sqrt(8._DKIND*eqk131*eqk221*
-     &               fh*d(i,j,k)+eqk131**2._DKIND))
+     &               myfh*d(i,j,k)+eqk131**2._DKIND))
 
                 dheq = (abs(heq2-heq1)/(exp(eqt2) - exp(eqt1)))
      &               * (tgas(i)/p2d(i)) * edot(i)
                 heq = (-1._DKIND / (4._DKIND*k22(i))) * (k13(i)-
      &               sqrt(8._DKIND*k13(i)*k22(i)*
-     &               fh*d(i,j,k)+k13(i)**2._DKIND))
+     &               myfh*d(i,j,k)+k13(i)**2._DKIND))
                 !write(0,*) heq2, heq1, eqt2, eqt1, tgas(i), p2d(i), 
 !     &                     edot(i)
                 if (d(i,j,k)*dom.gt.1e18_DKIND.and.i.eq.4) then
@@ -891,7 +908,8 @@ c            WARNING_MESSAGE
       call make_consistent_g(de, HI, HII, HeI, HeII, HeIII,
      &                     HM, H2I, H2II, DI, DII, HDI, metal, 
      &                     d, is, ie, js, je, ks, ke,
-     &                     in, jn, kn, ispecies, imetal, fh, dtoh)
+     &                     in, jn, kn, ispecies, imetal, fh, dtoh,
+     &                     ifhfield, fhfield, dtohfield)
 
       endif
 
@@ -2451,7 +2469,8 @@ c
       subroutine make_consistent_g(de, HI, HII, HeI, HeII, HeIII,
      &                        HM, H2I, H2II, DI, DII, HDI, metal, d,
      &                        is, ie, js, je, ks, ke,
-     &                        in, jn, kn, ispecies, imetal, fh, dtoh)
+     &                        in, jn, kn, ispecies, imetal, fh, dtoh,
+     &                        ifhfield, fhfield, dtohfield)
 ! -------------------------------------------------------------------
 
       implicit NONE
@@ -2459,19 +2478,21 @@ c
 
 !     Arguments
 
-      integer in, jn, kn, is, ie, js, je, ks, ke, ispecies, imetal
+      integer in, jn, kn, is, ie, js, je, ks, ke, ispecies, imetal,
+     &        ifhfield
       R_PREC  de(in,jn,kn),   HI(in,jn,kn),   HII(in,jn,kn),
      &        HeI(in,jn,kn), HeII(in,jn,kn), HeIII(in,jn,kn),
      &        d(in,jn,kn), metal(in,jn,kn),
      &        HM(in,jn,kn),  H2I(in,jn,kn), H2II(in,jn,kn),
-     &        DI(in,jn,kn),  DII(in,jn,kn), HDI(in,jn,kn)
+     &        DI(in,jn,kn),  DII(in,jn,kn), HDI(in,jn,kn),
+     &        fhfield(in,jn,kn), dtohfield(in,jn,kn)
       real*8 fh, dtoh
 
 !     locals
 
       integer i, j, k
       real*8 totalH(in), totalHe(in),
-     &       totalD, metalfree(in)
+     &       totalD, metalfree(in), myfh(in), mydtoh(in)
       R_PREC correctH, correctHe, correctD
 
 !     Loop over all zones
@@ -2491,6 +2512,32 @@ c
             metalfree(i) = d(i,j,k)
          enddo
       endif
+
+!     Pick up the hydrogen mass fraction and the deuterium-to-hydrogen
+!     mass ratio, either per-cell or from the scalar parameters
+
+      if (ifhfield .gt. 0) then
+         do i = is+1, ie+1
+            myfh(i) = fhfield(i,j,k)
+         enddo
+      else
+         do i = is+1, ie+1
+            myfh(i) = fh
+         enddo
+      endif
+
+      if (ispecies .gt. 2) then
+         if (ifhfield .gt. 0) then
+            do i = is+1, ie+1
+               mydtoh(i) = dtohfield(i,j,k)
+            enddo
+         else
+            do i = is+1, ie+1
+               mydtoh(i) = dtoh
+            enddo
+         endif
+      endif
+
 
       do i = is+1, ie+1
          HI   (i,j,k) = abs(HI   (i,j,k))
@@ -2516,11 +2563,11 @@ c
 !     Correct densities by keeping fractions the same
 
       do i = is+1, ie+1
-         correctH = real(fh*metalfree(i)/totalH(i), RKIND)
+         correctH = real(myfh(i)*metalfree(i)/totalH(i), RKIND)
          HI(i,j,k)  = HI(i,j,k)*correctH
          HII(i,j,k) = HII(i,j,k)*correctH
 
-         correctHe = real((1._DKIND - fh)*
+         correctHe = real((1._DKIND - fh(i))*
      &        metalfree(i)/totalHe(i), RKIND)
          HeI(i,j,k)   = HeI(i,j,k)*correctHe
          HeII(i,j,k)  = HeII(i,j,k)*correctHe
@@ -2544,7 +2591,7 @@ c
             HDI (i,j,k) = abs(HDI (i,j,k))
             totalD = DI(i,j,k) + DII(i,j,k) +
      &           2._DKIND/3._DKIND*HDI(i,j,k)
-            correctD = real(fh*dtoh*metalfree(i)/totalD, RKIND)
+            correctD = real(myfh(i)*mydtoh(i)*metalfree(i)/totalD, RKIND)
             DI  (i,j,k) = DI (i,j,k)*correctD
             DII (i,j,k) = DII(i,j,k)*correctD
             HDI (i,j,k) = HDI(i,j,k)*correctD

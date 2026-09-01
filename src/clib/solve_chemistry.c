@@ -42,7 +42,9 @@ extern void FORTRAN_NAME(solve_rate_cool_g)(
         int *ih2co, int *ipiht, int *idustrec, int *igammah,
 	double *dx, double *dt, double *aye, double *temstart, double *temend,
 	double *utem, double *uxyz, double *uaye, double *urho, double *utim,
-	double *gamma, double *fh, double *dtoh, double *z_solar, double *fgr,
+	double *gamma, double *fh, double *dtoh,
+  int *ifhfield, gr_float *fhfield, gr_float *dtohfield, 
+  double *z_solar, double *fgr,
 	double *k1a, double *k2a, double *k3a, double *k4a, double *k5a,
 	double *k6a, double *k7a, double *k8a, double *k9a, double *k10a,
 	double *k11a, double *k12a, double *k13a, double *k13dda, double *k14a,
@@ -157,6 +159,12 @@ int local_solve_chemistry(chemistry_data *my_chemistry,
       POW(my_units->a_value * my_units->a_units, 3);
   }
 
+  /* Error checking for the per-cell hydrogen fraction fields */
+  if (hydrogen_fraction_err_check(my_chemistry, my_fields,
+                                  "local_solve_chemistry") == FAIL) {
+    return FAIL;
+  }
+
   /* Error checking for H2 shielding approximation */
   if (self_shielding_err_check(my_chemistry, my_fields,
                                "local_solve_chemistry") == FAIL) {
@@ -219,6 +227,9 @@ int local_solve_chemistry(chemistry_data *my_chemistry,
     &my_chemistry->Gamma,
     &my_chemistry->HydrogenFractionByMass,
     &my_chemistry->DeuteriumToHydrogenRatio,
+    &my_chemistry->ExplicitHydrogenFraction,
+    my_fields->hydrogen_fraction,
+    my_fields->deuterium_ratio,
     &my_chemistry->SolarMetalFractionByMass,
     &my_chemistry->local_dust_to_gas_ratio,
     my_rates->k1,

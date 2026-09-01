@@ -30,6 +30,8 @@ ENTRY(DI_density)
 ENTRY(DII_density)
 ENTRY(HDI_density)
 ENTRY(e_density)
+ENTRY(hydrogen_fraction)
+ENTRY(deuterium_ratio)
 ENTRY(metal_density)
 ENTRY(dust_density)
 

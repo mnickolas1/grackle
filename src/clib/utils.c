@@ -15,6 +15,31 @@
 #include <stdio.h> // fprintf, stderr
 #include "grackle_macros.h"
 
+int hydrogen_fraction_err_check(const chemistry_data *my_chemistry,
+                                const grackle_field_data *fields,
+                                const char* func_name) {
+  if (my_chemistry->ExplicitHydrogenFraction != 1) { return SUCCESS; }
+
+  if (fields->hydrogen_fraction == NULL) {
+    fprintf(stderr, "Error in %s: ExplicitHydrogenFraction is set to 1, but "
+                    "the hydrogen_fraction field of grackle_field_data is "
+                    "NULL.\n",
+            func_name);
+    return FAIL;
+  }
+
+  if ((my_chemistry->primordial_chemistry > 2) &&
+      (fields->deuterium_ratio == NULL)) {
+    fprintf(stderr, "Error in %s: ExplicitHydrogenFraction is set to 1 and "
+                    "primordial_chemistry is greater than 2, but the "
+                    "deuterium_ratio field of grackle_field_data is NULL.\n",
+            func_name);
+    return FAIL;
+  }
+
+  return SUCCESS;
+}
+
 int self_shielding_err_check(const chemistry_data *my_chemistry,
                              const grackle_field_data *fields,
                              const char* func_name) {

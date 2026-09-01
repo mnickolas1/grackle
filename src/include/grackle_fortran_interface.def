@@ -55,6 +55,8 @@ c     This is the fortran definition of grackle_field_data
          TYPE(C_PTR) :: DII_density
          TYPE(C_PTR) :: HDI_density
          TYPE(C_PTR) :: e_density
+         TYPE(C_PTR) :: hydrogen_fraction
+         TYPE(C_PTR) :: deuterium_ratio
          TYPE(C_PTR) :: metal_density
          TYPE(C_PTR) :: dust_density
 
@@ -68,7 +70,9 @@ c     This is the fortran definition of grackle_field_data
 
          TYPE(C_PTR) :: temperature_floor
 
-         TYPE(C_PTR) :: RT_heating_rate
+         TYPE(C_PTR) :: RT_HI_heating_rate
+         TYPE(C_PTR) :: RT_HeI_heating_rate
+         TYPE(C_PTR) :: RT_HeII_heating_rate
          TYPE(C_PTR) :: RT_HI_ionization_rate
          TYPE(C_PTR) :: RT_HeI_ionization_rate
          TYPE(C_PTR) :: RT_HeII_ionization_rate
@@ -107,6 +111,7 @@ c     This is the fortran definition of grackle_chemistry_data
          INTEGER(C_INT) :: h2_optical_depth_approximation
          INTEGER(C_INT) :: ih2co
          INTEGER(C_INT) :: ipiht
+         INTEGER(C_INT) :: ExplicitHydrogenFraction
          REAL(C_DOUBLE) :: HydrogenFractionByMass
          REAL(C_DOUBLE) :: DeuteriumToHydrogenRatio
          REAL(C_DOUBLE) :: SolarMetalFractionByMass

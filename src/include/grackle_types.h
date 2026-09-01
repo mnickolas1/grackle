@@ -76,6 +76,8 @@ typedef struct
   gr_float *DII_density;
   gr_float *HDI_density;
   gr_float *e_density;
+  gr_float *hydrogen_fraction;
+  gr_float *deuterium_ratio;
   gr_float *metal_density;
   gr_float *dust_density;
 
