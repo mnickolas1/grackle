@@ -168,6 +168,8 @@ cdef extern from "grackle.h":
       gr_float *H2_self_shielding_length;
       gr_float *H2_custom_shielding_factor;
       gr_float *isrf_habing;
+      gr_float *hydrogen_fraction;
+      gr_float *deuterium_ratio;
 
     ctypedef struct c_grackle_version "grackle_version":
       const char* version;

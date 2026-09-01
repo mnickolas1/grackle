@@ -679,6 +679,30 @@ electron mass density in :c:data:`density_units` (see :ref:`density-note`).
    of this field should be the same as those of the
    :c:data:`interstellar_radiation_field` parameter.
 
+.. c:var:: gr_float *hydrogen_fraction
+
+   Pointer to a field containing, for each cell, the fraction by mass of
+   hydrogen in the metal-free portion of the gas. Used when
+   :c:data:`ExplicitHydrogenFraction` is set to 1, in which case it
+   replaces the scalar :c:data:`HydrogenFractionByMass` parameter.
+
+   The values must be consistent with Grackle's own accounting of the
+   species: the denominator is the metal-free gas density (the total
+   density minus ``metal_density``), and the hydrogen mass in the
+   numerator is the sum over HI, HII, HM, H2I and H2II (plus the hydrogen
+   in HDI when :c:data:`primordial_chemistry` is 3). This is the ratio
+   that Grackle renormalizes the species to at the end of each solver
+   call, so an inconsistent value will silently rescale the abundances.
+
+.. c:var:: gr_float *deuterium_ratio
+
+   Pointer to a field containing, for each cell, the ratio by mass of
+   deuterium to hydrogen. Used when :c:data:`ExplicitHydrogenFraction` is
+   set to 1 and :c:data:`primordial_chemistry` is 3, in which case it
+   replaces the scalar :c:data:`DeuteriumToHydrogenRatio` parameter.
+   As in the scalar case, HD is ignored when the deuterium species are
+   renormalized, so the ratio is assumed to be small.
+
 It is not necessary to attach a pointer to any field that you do
 not intend to use.
 

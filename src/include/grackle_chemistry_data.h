@@ -118,6 +118,11 @@ typedef struct
   int h2_optical_depth_approximation;
   int ih2co; // flag for H2 cooling (0-off/1-on)
   int ipiht; // flag for photoionization cooling
+
+  /* flag to supply per-cell hydrogen mass fraction & deuterium-to-hydrogen
+     mass ratio fields (requires primordial_chemistry > 0) */
+  int ExplicitHydrogenFraction;
+
   double HydrogenFractionByMass;
   double DeuteriumToHydrogenRatio;
   double SolarMetalFractionByMass;

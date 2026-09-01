@@ -288,6 +288,30 @@ For all on/off integer flags, 0 is off and 1 is on.
    & Rees (2000) <http://adsabs.harvard.edu/abs/2000ApJ...534...11H>`_.
    Default: 0.
 
+.. c:var:: int ExplicitHydrogenFraction
+
+   Flag to supply the hydrogen mass fraction and the deuterium-to-hydrogen
+   mass ratio as per-cell fields rather than as global scalars. When set to
+   0 (the default), the scalar :c:data:`HydrogenFractionByMass` and
+   :c:data:`DeuteriumToHydrogenRatio` parameters are applied to every cell.
+   When set to 1, the values are read per cell from the
+   :c:data:`hydrogen_fraction` and :c:data:`deuterium_ratio` pointers of
+   the ``grackle_field_data`` struct, and the scalar parameters are ignored.
+
+   The per-cell values must be consistent with Grackle's own definition of
+   which species count towards hydrogen and helium: the hydrogen mass
+   fraction is the fraction of the *metal-free* gas mass made up of
+   HI, HII, HM, H2I, H2II (and, for
+   :c:data:`primordial_chemistry` = 3, the H bound up in HDI), and the
+   deuterium-to-hydrogen ratio is by mass. These are the ratios that the
+   species-renormalization step enforces at the end of each solver call.
+
+   This requires :c:data:`primordial_chemistry` > 0; initialization reports
+   an error otherwise. The tabulated
+   (:c:data:`primordial_chemistry` = 0) mode interpolates cooling tables
+   that were generated for one specific hydrogen mass fraction, so a
+   spatially varying value is not meaningful there. Default: 0.
+
 .. c:var:: float HydrogenFractionByMass
 
    The fraction by mass of Hydrogen in the metal-free portion of the
@@ -304,12 +328,17 @@ For all on/off integer flags, 0 is off and 1 is on.
    If the user doesn't modify the value, the value is overwritten with a value of about 0.716 in tabulated mode and a value of 0.76 in non-equilibrium mode.
    While users are allowed to set arbitrary values for the non-equilibrium solver, tabulated mode reports an error if the user initializes this to a value that does not exactly match the default.
 
+   This parameter is ignored when :c:data:`ExplicitHydrogenFraction` is set
+   to 1, in which case the value is taken per cell from the
+   :c:data:`hydrogen_fraction` field instead.
+
 .. c:var:: float DeuteriumToHydrogenRatio
 
    The ratio by mass of Deuterium to Hydrogen. Default: 6.8e-5 (the value
    from `Burles & Tytler (1998)
    <https://ui.adsabs.harvard.edu/abs/1998ApJ...507..732B/abstract>`_
-   multiplied by 2 for the mass of Deuterium).
+   multiplied by 2 for the mass of Deuterium). Ignored when
+   :c:data:`ExplicitHydrogenFraction` is set to 1.
 
 .. c:var:: float SolarMetalFractionByMass
 

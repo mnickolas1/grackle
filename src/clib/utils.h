@@ -23,3 +23,14 @@
 int self_shielding_err_check(const chemistry_data *my_chemistry,
                              const grackle_field_data *fields,
                              const char* func_name);
+
+/// Perform an error check related to the per-cell hydrogen fraction fields.
+/// If the check fails, the function returns FAIL and prints an error message
+/// to stderr
+///
+/// @param my_chemistry Holds configuration of chemistry solver
+/// @param fields Specify the field names
+/// @param func_name Name of the function that is calling the error check
+int hydrogen_fraction_err_check(const chemistry_data *my_chemistry,
+                                const grackle_field_data *fields,
+                                const char* func_name);

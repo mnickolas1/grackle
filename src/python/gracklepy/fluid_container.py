@@ -159,6 +159,10 @@ def _required_extra_fields(my_chemistry):
         my_fields.append("H2_custom_shielding_factor")
     if my_chemistry.use_isrf_field == 1:
         my_fields.append("isrf_habing")
+    if my_chemistry.ExplicitHydrogenFraction == 1:
+        my_fields.append("hydrogen_fraction")
+        if my_chemistry.primordial_chemistry > 2:
+            my_fields.append("deuterium_ratio")
     return my_fields
 
 def _photo_units(my_chemistry):
@@ -175,8 +179,10 @@ _field_units = {
     "RT_H2_dissociation_rate": (_photo_units, "1/s"),
     "cooling_rate": (None, "erg*cm**3/s"),
     "cooling_time": ("time_units", "s"),
+    "deuterium_ratio": (None, ""),
     "dust_temperature": (None, "K"),
     "gamma": (None, ""),
+    "hydrogen_fraction": (None, ""),
     "internal_energy": ("energy_units", "erg/g"),
     "isrf_habing": (None, ""),
     "mean_molecular_weight": (None, ""),

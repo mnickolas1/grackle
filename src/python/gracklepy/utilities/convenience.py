@@ -120,6 +120,13 @@ def setup_fluid_container(my_chemistry,
     fh = my_chemistry.HydrogenFractionByMass
     d2h = my_chemistry.DeuteriumToHydrogenRatio
 
+    # when per-cell values are in use, fill the fields with the (uniform)
+    # scalar values so that the initial state stays self-consistent
+    if my_chemistry.ExplicitHydrogenFraction == 1:
+        fc["hydrogen_fraction"][:] = fh
+        if my_chemistry.primordial_chemistry > 2:
+            fc["deuterium_ratio"][:] = d2h
+
     metal_free = 1 - metal_mass_fraction
     H_total = fh * metal_free
     He_total = (1 - fh) * metal_free

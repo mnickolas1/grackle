@@ -102,6 +102,12 @@ typedef struct
 
   gr_float *isrf_habing;
 
+  /* per-cell hydrogen mass fraction (of the metal-free gas) and
+     deuterium-to-hydrogen mass ratio. Used when the
+     ExplicitHydrogenFraction parameter is set to 1. */
+  gr_float *hydrogen_fraction;
+  gr_float *deuterium_ratio;
+
 } grackle_field_data;
 
 
