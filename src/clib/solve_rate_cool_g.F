@@ -2567,7 +2567,7 @@ c
          HI(i,j,k)  = HI(i,j,k)*correctH
          HII(i,j,k) = HII(i,j,k)*correctH
 
-         correctHe = real((1._DKIND - fh(i))*
+         correctHe = real((1._DKIND - myfh(i))*
      &        metalfree(i)/totalHe(i), RKIND)
          HeI(i,j,k)   = HeI(i,j,k)*correctHe
          HeII(i,j,k)  = HeII(i,j,k)*correctHe
