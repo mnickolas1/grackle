@@ -118,7 +118,6 @@
 !               deuterium-to-hydrogen mass ratio fields are supplied
 !    fhfield  - per-cell hydrogen mass fraction (used when ifhfield is 1)
 !    dtohfield - per-cell deuterium to H mass ratio (used when ifhfield is 1)
-!    dtoh     - Deuterium to H mass ratio
 !                                         
 !    z_solar  - Solar metal mass fraction
 !    fgr      - the local dust to gas ratio (by mass)
