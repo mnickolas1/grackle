@@ -828,7 +828,7 @@ c  new (correct) way: (april 4, 2007)
 !
 !     Better self-shielding in HI using Eq. 13 and 14 from
 !     Rahmati et. al. 2013 (MNRAS, 430, 2427-2445)
-!     approximate self shielding in HeI and HeII
+!     approximate self shielding in HI and HeI
 !
 
         do i = is+1, ie+1
@@ -924,8 +924,8 @@ c  new (correct) way: (april 4, 2007)
 
              edot(i) = edot(i) + real(ipiht, DKIND)*(
      &              piHi * HI (i,j,k)* fSShHI
-     &           + piHeI * HeI(i,j,k)* fSShHeI
-     &           )/dom
+     &            + piHeI * HeI(i,j,k)*0.25_DKIND* fSShHeI
+     &              )/dom
 !
 !          Ignoring HeII heating (HeII heating rate -> 0)
 !
