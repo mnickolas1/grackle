@@ -72,9 +72,11 @@ c     This is the fortran definition of grackle_field_data
          TYPE(C_PTR) :: temperature_floor
 
          TYPE(C_PTR) :: RT_HI_heating_rate
+         TYPE(C_PTR) :: RT_H2_heating_rate
          TYPE(C_PTR) :: RT_HeI_heating_rate
          TYPE(C_PTR) :: RT_HeII_heating_rate
          TYPE(C_PTR) :: RT_HI_ionization_rate
+         TYPE(C_PTR) :: RT_H2_ionization_rate
          TYPE(C_PTR) :: RT_HeI_ionization_rate
          TYPE(C_PTR) :: RT_HeII_ionization_rate
          TYPE(C_PTR) :: RT_H2_dissociation_rate

@@ -23,7 +23,8 @@
      &                h2ltea, gasgra,
      &                iradshield, avgsighi, avgsighei, avgsigheii,
      &                k24, k26, 
-     &                iradtrans, irt_honly, photogammaHI, photogammaHeI, photogammaHeII,
+     &                iradtrans, irt_honly, 
+     &                photogammaHI, photogammaH2I, photogammaHeI, photogammaHeII,
      &                ih2optical, iciecool, ciecoa, 
      &                icmbTfloor, iClHeat, clEleFra,
      &                priGridRank, priGridDim,
@@ -82,7 +83,7 @@
      &        Vheat(in,jn,kn), Mheat(in,jn,kn), Tfloor(in,jn,kn),
      &        isrf_habing(in,jn,kn),
      &        cooltime(in,jn,kn)
-      real*8  photogammaHI(in,jn,kn), photogammaHeI(in,jn,kn), photogammaHeII(in,jn,kn)
+      real*8  photogammaHI(in,jn,kn), photogammaH2I(in,jn,kn), photogammaHeI(in,jn,kn), photogammaHeII(in,jn,kn)
       real*8  hyd01ka(nratec), h2k01a(nratec), vibha(nratec), 
      &        rotha(nratec), rotla(nratec), gpldla(nratec),
      &        gphdla(nratec), hdltea(nratec), hdlowa(nratec),
@@ -280,7 +281,8 @@
      &                gammaha_eff, gasgr_tdust, regr,
      &                iradshield, avgsighi, avgsighei, avgsigheii,
      &                k24, k26, 
-     &                iradtrans, irt_honly, photogammaHI, photogammaHeI, photogammaHeII,
+     &                iradtrans, irt_honly, 
+     &                photogammaHI, photogammaH2I, photogammaHeI, photogammaHeII,
      &                ih2optical, iciecool, ciecoa, cieco,
      &                icmbTfloor, iClHeat, clEleFra,
      &                priGridRank, priGridDim,
