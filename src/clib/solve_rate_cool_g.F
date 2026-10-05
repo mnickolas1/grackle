@@ -39,7 +39,7 @@
      &                kphHeI, kphHeII, 
      &                kdissH2I,
      &                photogammaHI, photogammaH2I, 
-     $                photogammaHeI, photogammaHeII, 
+     &                photogammaHeI, photogammaHeII, 
      &                xH2shield,
      &                ierr,
      &                ih2optical, iciecool, ithreebody, ciecoa, 
@@ -2067,7 +2067,7 @@ c -------------------------------------------------------------------
 
 !     Radiation Fields
       R_PREC  kphHI(in,jn,kn), kphH2I(in,jn,kn), 
-   &          kphHeI(in,jn,kn), kphHeII(in,jn,kn)
+     &        kphHeI(in,jn,kn), kphHeII(in,jn,kn)
 
 
 !     Rate values
@@ -2622,7 +2622,7 @@ c
             totalD = DI(i,j,k) + DII(i,j,k) +
      &           2._DKIND/3._DKIND*HDI(i,j,k)
             correctD = real(myfh(i) * mydtoh(i) * metalfree(i) 
-                     / totalD, RKIND)
+     &               / totalD, RKIND)
             DI  (i,j,k) = DI (i,j,k)*correctD
             DII (i,j,k) = DII(i,j,k)*correctD
             HDI (i,j,k) = HDI(i,j,k)*correctD
