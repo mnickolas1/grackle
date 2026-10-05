@@ -33,7 +33,8 @@
      &                iradshield, avgsighi, avgsighei, avgsigheii,
      &                k24, k26, 
      &                iradtrans, irt_honly, 
-     &                photogammaHI, photogammaH2I, photogammaHeI, photogammaHeII,
+     &                photogammaHI, photogammaH2I, 
+     &                photogammaHeI, photogammaHeII,
      &                ih2optical, iciecool, ciecoa, cieco,
      &                icmbTfloor, iClHeat, clEleFra,
      &                priGridRank, priGridDim,
@@ -90,7 +91,8 @@
      &        DI(in,jn,kn),  DII(in,jn,kn), HDI(in,jn,kn),
      &        metal(in,jn,kn), dust(in,jn,kn),
      &        Vheat(in,jn,kn), Mheat(in,jn,kn), Tfloor(in,jn,kn),
-     &        photogammaHI(in,jn,kn), photogammaH2I(in,jn,kn), photogammaHeI(in,jn,kn), photogammaHeII(in,jn,kn), 
+     &        photogammaHI(in,jn,kn), photogammaH2I(in,jn,kn), 
+     &        photogammaHeI(in,jn,kn), photogammaHeII(in,jn,kn), 
      &        isrf_habing(in,jn,kn)
       real*8  hyd01ka(nratec), h2k01a(nratec), vibha(nratec), 
      &        rotha(nratec), rotla(nratec), gpldla(nratec),
@@ -1071,21 +1073,23 @@ c  new (correct) way: (april 4, 2007)
           do i = is + 1, ie + 1
             if (itmask(i)) then
 
-              edot(i) = edot(i) + real(ipiht, DKIND) * photogammaHI(i,j,k)
-     &                          / coolunit * HI(i,j,k) / dom
+              edot(i) = edot(i) + real(ipiht, DKIND) 
+     &                * photogammaHI(i,j,k)
+     &                / coolunit * HI(i,j,k) / dom
 
               if (irt_honly .eq. 0) then
                 
                 if (ispecies .gt. 1) then
-                  edot(i) = edot(i) + real(ipiht, DKIND) * photogammaH2I(i,j,k)
-     &              / coolunit * H2I(i,j,k) / 2.0_DKIND / dom
+                  edot(i) = edot(i) + real(ipiht, DKIND) 
+     &                    * photogammaH2I(i,j,k)
+     &                    / coolunit * H2I(i,j,k) / 2.0_DKIND / dom
                 endif
 
                 edot(i) = edot(i)
      &            + real(ipiht, DKIND) * photogammaHeI(i,j,k)
-     &                          / coolunit * HeI(i,j,k) / 4.0_DKIND / dom
+     &            / coolunit * HeI(i,j,k) / 4.0_DKIND / dom
      &            + real(ipiht, DKIND) * photogammaHeII(i,j,k)
-     &                          / coolunit * HeII(i,j,k) / 4.0_DKIND / dom
+     &            / coolunit * HeII(i,j,k) / 4.0_DKIND / dom
 
               endif
 

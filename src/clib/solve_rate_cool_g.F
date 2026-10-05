@@ -35,9 +35,11 @@
      &                avgsighi, avgsighei, avgsigheii,
      &                iradtrans, iradcoupled, iradstep,
      &                irt_honly, 
-     &                kphHI, kphH2I, kphHeI, kphHeII, 
+     &                kphHI, kphH2I, 
+     &                kphHeI, kphHeII, 
      &                kdissH2I,
-     &                photogammaHI, photogammaH2I, photogammaHeI, photogammaHeII, 
+     &                photogammaHI, photogammaH2I, 
+     $                photogammaHeI, photogammaHeII, 
      &                xH2shield,
      &                ierr,
      &                ih2optical, iciecool, ithreebody, ciecoa, 
@@ -205,9 +207,11 @@
 
 !  Radiative transfer fields
 
-      R_PREC  kphHI(in,jn,kn), kphH2I(in,jn,kn), kphHeI(in,jn,kn), kphHeII(in,jn,kn),
+      R_PREC  kphHI(in,jn,kn), kphH2I(in,jn,kn), 
+     &        kphHeI(in,jn,kn), kphHeII(in,jn,kn),
      &        kdissH2I(in,jn,kn), 
-     &        photogammaHI(in,jn,kn), photogammaH2I(in,jn,kn), photogammaHeI(in,jn,kn), photogammaHeII(in,jn,kn)
+     &        photogammaHI(in,jn,kn), photogammaH2I(in,jn,kn), 
+     &        photogammaHeI(in,jn,kn), photogammaHeII(in,jn,kn)
 
 !  H2 self-shielding length-scale field
 
@@ -506,7 +510,8 @@
      &                iradshield, avgsighi, avgsighei, avgsigheii,
      &                k24, k26,
      &                iradtrans, irt_honly, 
-     &                photogammaHI, photogammaH2I, photogammaHeI, photogammaHeII,
+     &                photogammaHI, photogammaH2I, 
+     &                photogammaHeI, photogammaHeII,
      &                ih2optical, iciecool, ciecoa, cieco,
      &                icmbTfloor, iClHeat, clEleFra,
      &                priGridRank, priGridDim,
@@ -566,7 +571,8 @@
      &                     k24shield, k25shield, k26shield, 
      &                     k28shield, k29shield, k30shield, k31shield,
      &                     iradtrans, irt_honly, 
-     &                     kphHI, kphH2I, kphHeI, kphHeII,
+     &                     kphHI, kphH2I, 
+     &                     kphHeI, kphHeII,
      &                     itmask, edot, chunit, dom)
 
 !           Find timestep that keeps relative chemical changes below 10%
@@ -819,7 +825,8 @@
      &                     HMp, H2Ip, H2IIp, DIp, DIIp, HDIp,
      &                     dedot_prev, HIdot_prev,
      &                     iradtrans, irt_honly, 
-     &                     kphHI, kphH2I, kphHeI, kphHeII,
+     &                     kphHI, kphH2I, 
+     &                     kphHeI, kphHeII,
      &                     itmask)
 
             endif
@@ -1785,7 +1792,8 @@ c
      &                     k24shield, k25shield, k26shield, 
      &                     k28shield, k29shield, k30shield, k31shield,
      &                     iradtrans, irt_honly, 
-     &                     kphHI, kphH2I, kphHeI, kphHeII,
+     &                     kphHI, kphH2I, 
+     &                     kphHeI, kphHeII,
      &                     itmask, edot, chunit, dom)
 
 ! -------------------------------------------------------------------
@@ -1809,7 +1817,8 @@ c
      &        HM(in,jn,kn),  H2I(in,jn,kn), H2II(in,jn,kn)
 
 !      Radiative Transfer Fields
-      R_PREC  kphHI(in,jn,kn), kphH2I(in,jn,kn), kphHeI(in,jn,kn), kphHeII(in,jn,kn)
+      R_PREC  kphHI(in,jn,kn), kphH2I(in,jn,kn), 
+     &        kphHeI(in,jn,kn), kphHeII(in,jn,kn)
 
       real*8 chunit
 
@@ -1987,7 +1996,8 @@ c
                   dedot(i) = dedot(i) + kphHI(i,j,k)*HI(i,j,k)
                   
                   if (ispecies .gt. 1) then
-                    dedot(i) = dedot(i) + kphH2I(i,j,k) * H2I(i,j,k) / 2._DKIND
+                    dedot(i) = dedot(i) 
+     &                       + kphH2I(i,j,k) * H2I(i,j,k) / 2._DKIND
                   endif
                   
                   dedot(i) = dedot(i) 
@@ -2032,7 +2042,8 @@ c
      &                     HMp, H2Ip, H2IIp, DIp, DIIp, HDIp,
      &                     dedot_prev, HIdot_prev,
      &                     iradtrans, irt_honly,
-     &                     kphHI, kphH2I, kphHeI, kphHeII,
+     &                     kphHI, kphH2I, 
+     &                     kphHeI, kphHeII,
      &                     itmask)
 c -------------------------------------------------------------------
 
@@ -2055,7 +2066,8 @@ c -------------------------------------------------------------------
      &        DI(in,jn,kn),  DII(in,jn,kn), HDI(in,jn,kn)
 
 !     Radiation Fields
-      R_PREC  kphHI(in,jn,kn), kphH2I(in,jn,kn), kphHeI(in,jn,kn), kphHeII(in,jn,kn)
+      R_PREC  kphHI(in,jn,kn), kphH2I(in,jn,kn), 
+   &          kphHeI(in,jn,kn), kphHeII(in,jn,kn)
 
 
 !     Rate values
@@ -2609,7 +2621,8 @@ c
             HDI (i,j,k) = abs(HDI (i,j,k))
             totalD = DI(i,j,k) + DII(i,j,k) +
      &           2._DKIND/3._DKIND*HDI(i,j,k)
-            correctD = real(myfh(i)*mydtoh(i)*metalfree(i)/totalD, RKIND)
+            correctD = real(myfh(i) * mydtoh(i) * metalfree(i) 
+                     / totalD, RKIND)
             DI  (i,j,k) = DI (i,j,k)*correctD
             DII (i,j,k) = DII(i,j,k)*correctD
             HDI (i,j,k) = HDI(i,j,k)*correctD
