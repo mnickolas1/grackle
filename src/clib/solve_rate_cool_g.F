@@ -12,7 +12,8 @@
      &                igammah,
      &                dx, dt, aye, temstart, temend, 
      &                utem, uxyz, uaye, urho, utim,
-     &                gamma, fh, dtoh, z_solar, fgr,
+     &                gamma, fh, dtoh, ifhfield, fhfield, dtohfield,
+     &                z_solar, fgr,
      &                k1a, k2a, k3a, k4a, k5a, k6a, k7a, k8a, k9a, k10a,
      &                k11a, k12a, k13a, k13dda, k14a, k15a,
      &                k16a, k17a, k18a, k19a, k22a,
@@ -33,8 +34,12 @@
      &                h2ltea, gasgra, iH2shield, iradshield,
      &                avgsighi, avgsighei, avgsigheii,
      &                iradtrans, iradcoupled, iradstep,
-     &                irt_honly, kphHI, kphHeI, kphHeII, kdissH2I,
-     &                photogammaHI, photogammaHeI, photogammaHeII, 
+     &                irt_honly, 
+     &                kphHI, kphH2I, 
+     &                kphHeI, kphHeII, 
+     &                kdissH2I,
+     &                photogammaHI, photogammaH2I, 
+     &                photogammaHeI, photogammaHeII, 
      &                xH2shield,
      &                ierr,
      &                ih2optical, iciecool, ithreebody, ciecoa, 
@@ -108,9 +113,16 @@
 !    iradstep  - flag to indicate intermediate coupled radiative transfer timestep
 !    irt_honly - flag to indicate applying RT ionization and heating to HI only
 !    iH2shieldcustom - flag to indicate a custom H2 shielding factor is provided
-
-!    fh       - Hydrogen mass fraction (typically 0.76)
-!    dtoh     - Deuterium to H mass ratio
+ 
+!    fh       - Hydrogen mass fraction (typically 0.76) 
+!               Only used when ifhfield is 0
+!    dtoh     - Deuterium to H mass ratio 
+!               Only used when ifhfield is 0
+!    ifhfield - flag indicating that per-cell hydrogen mass fraction and
+!               deuterium-to-hydrogen mass ratio fields are supplied
+!    fhfield  - per-cell hydrogen mass fraction (used when ifhfield is 1)
+!    dtohfield - per-cell deuterium to H mass ratio (used when ifhfield is 1)
+!                                         
 !    z_solar  - Solar metal mass fraction
 !    fgr      - the local dust to gas ratio (by mass)
 !    dt       - timestep to integrate over
@@ -171,7 +183,7 @@
       integer icool, in, jn, kn, is, js, ks, ie, je, ke, nratec, 
      &        iexpand, ih2co, ipiht, ispecies, imetal, idim,
      &        ierr, imcool, idust, idustall, idustfield, idustrec,
-     &        igammah, ih2optical, iciecool, ithreebody,
+     &        igammah, ifhfield, ih2optical, iciecool, ithreebody,
      &        ndratec, clnew, iVheat, iMheat, iTfloor,
      &        iH2shield, iradshield,
      &        iradtrans, iradcoupled, iradstep, irt_honly,
@@ -189,13 +201,17 @@
      &        DI(in,jn,kn),  DII(in,jn,kn), HDI(in,jn,kn),
      &        d(in,jn,kn),     e(in,jn,kn),
      &        u(in,jn,kn),    v(in,jn,kn),     w(in,jn,kn),
+     &        fhfield(in,jn,kn), dtohfield(in,jn,kn), 
      &        metal(in,jn,kn), dust(in,jn,kn),
      &        Vheat(in,jn,kn), Mheat(in,jn,kn), Tfloor(in,jn,kn)
 
 !  Radiative transfer fields
 
-      R_PREC  kphHI(in,jn,kn), kphHeI(in,jn,kn), kphHeII(in,jn,kn),
-     &        kdissH2I(in,jn,kn), photogammaHI(in,jn,kn), photogammaHeI(in,jn,kn), photogammaHeII(in,jn,kn)
+      R_PREC  kphHI(in,jn,kn), kphH2I(in,jn,kn), 
+     &        kphHeI(in,jn,kn), kphHeII(in,jn,kn),
+     &        kdissH2I(in,jn,kn), 
+     &        photogammaHI(in,jn,kn), photogammaH2I(in,jn,kn), 
+     &        photogammaHeI(in,jn,kn), photogammaHeII(in,jn,kn)
 
 !  H2 self-shielding length-scale field
 
@@ -279,7 +295,7 @@
       real*8 coolunit, dbase1, tbase1, xbase1, chunit, uvel
       real*8 heq1, heq2, eqk221, eqk222, eqk131, eqk132,
      &       eqt1, eqt2, eqtdef, dheq, heq, dlogtem, dx_cgs,
-     &       c_ljeans
+     &       c_ljeans, myfh
 
 !  row temporaries
 
@@ -378,7 +394,7 @@
 !$omp&   i, j, k, iter,
 !$omp&   ttmin, energy, comp1, comp2,
 !$omp&   heq1, heq2, eqk221, eqk222, eqk131, eqk132,
-!$omp&   eqt1, eqt2, eqtdef, dheq, heq,
+!$omp&   eqt1, eqt2, eqtdef, dheq, heq, myfh,
 !$omp&   indixe,
 !$omp&   t1, t2, logtem, tdef,
 !$omp&   dtit, ttot, p2d, tgas, tgasold,
@@ -493,7 +509,9 @@
      &                gammaha_eff, gasgr_tdust, regr,
      &                iradshield, avgsighi, avgsighei, avgsigheii,
      &                k24, k26,
-     &                iradtrans, irt_honly, photogammaHI, photogammaHeI, photogammaHeII,
+     &                iradtrans, irt_honly, 
+     &                photogammaHI, photogammaH2I, 
+     &                photogammaHeI, photogammaHeII,
      &                ih2optical, iciecool, ciecoa, cieco,
      &                icmbTfloor, iClHeat, clEleFra,
      &                priGridRank, priGridDim,
@@ -534,7 +552,7 @@
      &               k31shield, h2dust, ncrn, ncrd1, ncrd2, 
      &               t1, t2, tdef, logtem, indixe, 
      &               dom, coolunit, tbase1, uxyz, xbase1, dx_cgs,
-     &               c_ljeans,iradtrans, kdissH2I, xH2shield, 
+     &               c_ljeans, iradtrans, kdissH2I, xH2shield, 
      &               iH2shieldcustom, f_shield_custom, itmask)
 
 !           Compute dedot and HIdot, the rates of change of de and HI
@@ -553,7 +571,8 @@
      &                     k24shield, k25shield, k26shield, 
      &                     k28shield, k29shield, k30shield, k31shield,
      &                     iradtrans, irt_honly, 
-     &                     kphHI, kphHeI, kphHeII,
+     &                     kphHI, kphH2I, 
+     &                     kphHeI, kphHeII,
      &                     itmask, edot, chunit, dom)
 
 !           Find timestep that keeps relative chemical changes below 10%
@@ -599,6 +618,13 @@
                if (d(i,j,k)*dom .gt. 1e8_DKIND .and. 
      &              edot(i) .gt. 0._DKIND      .and.
      &             ispecies .gt. 1) then
+
+               if (ifhfield .gt. 0) then
+                    myfh = fhfield(i,j,k)
+               else
+                    myfh = fh
+               endif
+
 !              Equilibrium value for H is:
 !              H = (-1._DKIND / (4*k22)) * (k13 - sqrt(8 k13 k22 rho + k13^2))
 !              We now want this to change by 10% or less, but we're only
@@ -618,7 +644,7 @@
      &            (k13a(indixe(i)+1) -k13a(indixe(i)))*eqtdef
                 heq2 = (-1._DKIND / (4._DKIND*eqk222)) * (eqk132-
      &               sqrt(8._DKIND*eqk132*eqk222*
-     &               fh*d(i,j,k)+eqk132**2._DKIND))
+     &               myfh*d(i,j,k)+eqk132**2._DKIND))
 
                 eqt1 = max(log(tgas(i)) - 0.1_DKIND*dlogtem, t1(i))
                 eqtdef = (eqt1 - t1(i))/(t2(i) - t1(i))
@@ -628,13 +654,13 @@
      &            (k13a(indixe(i)+1) -k13a(indixe(i)))*eqtdef
                 heq1 = (-1._DKIND / (4._DKIND*eqk221)) * (eqk131-
      &               sqrt(8._DKIND*eqk131*eqk221*
-     &               fh*d(i,j,k)+eqk131**2._DKIND))
+     &               myfh*d(i,j,k)+eqk131**2._DKIND))
 
                 dheq = (abs(heq2-heq1)/(exp(eqt2) - exp(eqt1)))
      &               * (tgas(i)/p2d(i)) * edot(i)
                 heq = (-1._DKIND / (4._DKIND*k22(i))) * (k13(i)-
      &               sqrt(8._DKIND*k13(i)*k22(i)*
-     &               fh*d(i,j,k)+k13(i)**2._DKIND))
+     &               myfh*d(i,j,k)+k13(i)**2._DKIND))
                 !write(0,*) heq2, heq1, eqt2, eqt1, tgas(i), p2d(i), 
 !     &                     edot(i)
                 if (d(i,j,k)*dom.gt.1e18_DKIND.and.i.eq.4) then
@@ -799,7 +825,8 @@
      &                     HMp, H2Ip, H2IIp, DIp, DIIp, HDIp,
      &                     dedot_prev, HIdot_prev,
      &                     iradtrans, irt_honly, 
-     &                     kphHI, kphHeI, kphHeII,
+     &                     kphHI, kphH2I, 
+     &                     kphHeI, kphHeII,
      &                     itmask)
 
             endif
@@ -891,7 +918,8 @@ c            WARNING_MESSAGE
       call make_consistent_g(de, HI, HII, HeI, HeII, HeIII,
      &                     HM, H2I, H2II, DI, DII, HDI, metal, 
      &                     d, is, ie, js, je, ks, ke,
-     &                     in, jn, kn, ispecies, imetal, fh, dtoh)
+     &                     in, jn, kn, ispecies, imetal, fh, dtoh,
+     &                     ifhfield, fhfield, dtohfield)
 
       endif
 
@@ -1398,7 +1426,7 @@ c -------------------------------------------------------------------
       enddo
 
 !
-!     Only self_shield UV
+!     Only shield UVB
 !
 
       if (ispecies .gt. 1) then
@@ -1584,11 +1612,11 @@ c -------------------------------------------------------------------
 !     Rahmati et. al. 2013 (MNRAS, 430, 2427-2445)
 !     approximate self shielding in HeI and HeII
 !
-!       Attenuate radiation rates for direct H2 ionization (15.4 eV)
-!       using same scaling as HI. (rate k29)
+!     Attenuate radiation rates for direct H2 ionization (15.4 eV)
+!     using same scaling as HI. (rate k29)
 !
-!       Attenuate radiation rates for H2+ dissociation (30 eV)
-!       using same scaling as HeII. (rate k28 and k30)
+!     Attenuate radiation rates for H2+ dissociation (30 eV)
+!     using same scaling as HeII. (rate k28 and k30)
 !
 
         do i = is+1, ie+1
@@ -1764,7 +1792,8 @@ c
      &                     k24shield, k25shield, k26shield, 
      &                     k28shield, k29shield, k30shield, k31shield,
      &                     iradtrans, irt_honly, 
-     &                     kphHI, kphHeI, kphHeII,
+     &                     kphHI, kphH2I, 
+     &                     kphHeI, kphHeII,
      &                     itmask, edot, chunit, dom)
 
 ! -------------------------------------------------------------------
@@ -1788,7 +1817,8 @@ c
      &        HM(in,jn,kn),  H2I(in,jn,kn), H2II(in,jn,kn)
 
 !      Radiative Transfer Fields
-      R_PREC  kphHI(in,jn,kn), kphHeI(in,jn,kn), kphHeII(in,jn,kn)
+      R_PREC  kphHI(in,jn,kn), kphH2I(in,jn,kn), 
+     &        kphHeI(in,jn,kn), kphHeII(in,jn,kn)
 
       real*8 chunit
 
@@ -1964,8 +1994,16 @@ c
                if (itmask(i)) then
                   HIdot(i) = HIdot(i) - kphHI(i,j,k)*HI(i,j,k)
                   dedot(i) = dedot(i) + kphHI(i,j,k)*HI(i,j,k)
+                  
+                  if (ispecies .gt. 1) then
+                    dedot(i) = dedot(i) 
+     &                       + kphH2I(i,j,k) * H2I(i,j,k) / 2._DKIND
+                  endif
+                  
+                  dedot(i) = dedot(i) 
      &                 + kphHeI(i,j,k) * HeI(i,j,k) / 4._DKIND
      &                 + kphHeII(i,j,k) * HeII(i,j,k) / 4._DKIND
+               
                endif
             enddo
          else
@@ -2004,7 +2042,8 @@ c
      &                     HMp, H2Ip, H2IIp, DIp, DIIp, HDIp,
      &                     dedot_prev, HIdot_prev,
      &                     iradtrans, irt_honly,
-     &                     kphHI, kphHeI, kphHeII,
+     &                     kphHI, kphH2I, 
+     &                     kphHeI, kphHeII,
      &                     itmask)
 c -------------------------------------------------------------------
 
@@ -2027,7 +2066,8 @@ c -------------------------------------------------------------------
      &        DI(in,jn,kn),  DII(in,jn,kn), HDI(in,jn,kn)
 
 !     Radiation Fields
-      R_PREC  kphHI(in,jn,kn), kphHeI(in,jn,kn), kphHeII(in,jn,kn)
+      R_PREC  kphHI(in,jn,kn), kphH2I(in,jn,kn), 
+     &        kphHeI(in,jn,kn), kphHeII(in,jn,kn)
 
 
 !     Rate values
@@ -2199,8 +2239,8 @@ c --- (C) Now do extra 3-species for molecular hydrogen ---
          do i = is+1, ie+1
             if (itmask(i)) then
 
-!        1) HI
-!     
+!          1) HI
+
             scoef  =      k2(i) * HII(i,j,k) * de(i,j,k) 
      &             + 2._DKIND*k13(i)* HI(i,j,k)  * H2I(i,j,k)/2._DKIND
      &             +      k11(i)* HII(i,j,k) * H2I(i,j,k)/2._DKIND
@@ -2260,8 +2300,39 @@ c --- (C) Now do extra 3-species for molecular hydrogen ---
      &             +    k17(i) * HM(i,j,k)
             HIIp(i)   = ( scoef*dtit(i) + HII(i,j,k) )
      &                      / ( 1._DKIND + acoef*dtit(i) )
-!     
-!          3) electrons:
+
+!          3) H2
+
+            scoef = 2._DKIND*(k8(i)  * HM(i,j,k)   * HI(i,j,k)
+     &            +       k10(i) * H2II(i,j,k) * HI(i,j,k)/2._DKIND
+     &            +       k19(i) * H2II(i,j,k) * HM(i,j,k)/2._DKIND
+     &            +       k22(i) * HI(i,j,k) * (HI(i,j,k))**2._DKIND)
+            acoef = ( k13(i)*HI(i,j,k) + k11(i)*HII(i,j,k)
+     &              + k12(i)*de(i,j,k) )
+     &              + k29shield(i) + k31shield(i)
+            
+            if ((iradtrans .eq. 1) .and. (irt_honly .eq. 0))
+     &          acoef = acoef + kphH2I(i,j,k)
+
+            if (anydust) then
+               scoef = scoef + 2._DKIND * h2dust(i) *
+     &              HI(i,j,k) * rhoH(i)
+            endif
+
+            H2Ip(i) = ( scoef*dtit(i) + H2I(i,j,k) )
+     &                / ( 1._DKIND + acoef*dtit(i) )
+
+!          4) H-
+
+            scoef = k7(i) * HI(i,j,k) * de(i,j,k) 
+            acoef = (k8(i)  + k15(i))  * HI(i,j,k) + 
+     &              (k16(i) + k17(i))  * HII(i,j,k) +  
+     &	            k14(i) * de(i,j,k) + k19(i) * H2II(i,j,k)/2.0 +
+     &	            k27
+            HMp(i) = (scoef*dtit(i) + HM(i,j,k))
+     &           / (1.0 + acoef*dtit(i))
+
+!          5) electrons:
 
             scoef =   k8(i) * HM(i,j,k) * HI(i,j,k)
      &             +  k15(i)* HM(i,j,k) * HI(i,j,k)
@@ -2273,10 +2344,12 @@ c --- (C) Now do extra 3-species for molecular hydrogen ---
      &             + k25shield(i)*HeIIp(i)/4._DKIND
      &             + k26shield(i)*HeIp(i)/4._DKIND
 
-            if ( (iradtrans .eq. 1) .and. (irt_honly .eq. 0) )
+            if ((iradtrans .eq. 1) .and. (irt_honly .eq. 0))
      &          scoef = scoef + kphHI(i,j,k) * HIp(i)
-     &                + kphHeI(i,j,k)  * HeIp(i)  / 4._DKIND
+     &                + kphH2I(i,j,k) * H2Ip(i) / 2._DKIND
+     &                + kphHeI(i,j,k) * HeIp(i) / 4._DKIND
      &                + kphHeII(i,j,k) * HeIIp(i) / 4._DKIND
+
             if ( (iradtrans .eq. 1) .and. (irt_honly .eq. 1) )
      &          scoef = scoef + kphHI(i,j,k) * HIp(i)
 
@@ -2291,46 +2364,21 @@ c --- (C) Now do extra 3-species for molecular hydrogen ---
             dep(i)  = ( scoef*dtit(i) + de(i,j,k) )
      &                / ( 1._DKIND + acoef*dtit(i) )
 
-!           7) H2
+!          6) H2+
 
-            scoef = 2._DKIND*(k8(i)  * HM(i,j,k)   * HI(i,j,k)
-     &            +       k10(i) * H2II(i,j,k) * HI(i,j,k)/2._DKIND
-     &            +       k19(i) * H2II(i,j,k) * HM(i,j,k)/2._DKIND
-     &            +       k22(i) * HI(i,j,k) * (HI(i,j,k))**2._DKIND)
-            acoef = ( k13(i)*HI(i,j,k) + k11(i)*HII(i,j,k)
-     &              + k12(i)*de(i,j,k) )
-     &              + k29shield(i) + k31shield(i)
+            scoef = 2._DKIND*(k9 (i)*HIp(i)*HIIp(i)
+     &                 +   k11(i)*H2Ip(i)/2._DKIND*HIIp(i)
+     &                 +   k17(i)*HMp(i)*HIIp(i)
+     &                 +   k29shield(i)*H2Ip(i)/2._DKIND)
+            acoef =   k10(i)*HIp(i) + k18(i)*dep(i)
+     &              + k19(i)*HMp(i)
+     &              + (k28shield(i)+k30shield(i))
 
-            if (anydust) then
-               scoef = scoef + 2._DKIND * h2dust(i) *
-     &              HI(i,j,k) * rhoH(i)
-            endif
+            if ((iradtrans .eq. 1) .and. (irt_honly .eq. 0))
+     &          scoef = scoef + kphH2I(i,j,k)*H2Ip(i)
 
-            H2Ip(i) = ( scoef*dtit(i) + H2I(i,j,k) )
-     &                / ( 1._DKIND + acoef*dtit(i) )
-
-!           8) H-
-
-            scoef = k7(i) * HI(i,j,k) * de(i,j,k) 
-            acoef = (k8(i)  + k15(i))  * HI(i,j,k) + 
-     &              (k16(i) + k17(i))  * HII(i,j,k) +  
-     &	            k14(i) * de(i,j,k) + k19(i) * H2II(i,j,k)/2.0 +
-     &	            k27
-            HMp(i) = (scoef*dtit(i) + HM(i,j,k))
-     &           / (1.0 + acoef*dtit(i))
-
-
-!           9) H2+
-
-            H2IIp(i) = 2._DKIND*( k9 (i)*HIp(i)*HIIp(i)
-     &                    +   k11(i)*H2Ip(i)/2._DKIND*HIIp(i)
-     &                    +   k17(i)*HMp(i)*HIIp(i)
-     &                    + k29shield(i)*H2Ip(i)
-     &                    )
-     &                 /  ( k10(i)*HIp(i) + k18(i)*dep(i)
-     &                    + k19(i)*HMp(i)
-     &                    + (k28shield(i)+k30shield(i))
-     &                    )
+            H2IIp(i) = scoef / max(acoef, tiny8)
+            H2IIp(i) = min(H2IIp(i), rhoH(i))
 
          endif                  ! itmask
          enddo
@@ -2451,7 +2499,8 @@ c
       subroutine make_consistent_g(de, HI, HII, HeI, HeII, HeIII,
      &                        HM, H2I, H2II, DI, DII, HDI, metal, d,
      &                        is, ie, js, je, ks, ke,
-     &                        in, jn, kn, ispecies, imetal, fh, dtoh)
+     &                        in, jn, kn, ispecies, imetal, fh, dtoh,
+     &                        ifhfield, fhfield, dtohfield)
 ! -------------------------------------------------------------------
 
       implicit NONE
@@ -2459,19 +2508,21 @@ c
 
 !     Arguments
 
-      integer in, jn, kn, is, ie, js, je, ks, ke, ispecies, imetal
+      integer in, jn, kn, is, ie, js, je, ks, ke, ispecies, imetal,
+     &        ifhfield
       R_PREC  de(in,jn,kn),   HI(in,jn,kn),   HII(in,jn,kn),
      &        HeI(in,jn,kn), HeII(in,jn,kn), HeIII(in,jn,kn),
      &        d(in,jn,kn), metal(in,jn,kn),
      &        HM(in,jn,kn),  H2I(in,jn,kn), H2II(in,jn,kn),
-     &        DI(in,jn,kn),  DII(in,jn,kn), HDI(in,jn,kn)
+     &        DI(in,jn,kn),  DII(in,jn,kn), HDI(in,jn,kn),
+     &        fhfield(in,jn,kn), dtohfield(in,jn,kn)
       real*8 fh, dtoh
 
 !     locals
 
       integer i, j, k
       real*8 totalH(in), totalHe(in),
-     &       totalD, metalfree(in)
+     &       totalD, metalfree(in), myfh(in), mydtoh(in)
       R_PREC correctH, correctHe, correctD
 
 !     Loop over all zones
@@ -2491,6 +2542,32 @@ c
             metalfree(i) = d(i,j,k)
          enddo
       endif
+
+!     Pick up the hydrogen mass fraction and the deuterium-to-hydrogen
+!     mass ratio, either per-cell or from the scalar parameters
+
+      if (ifhfield .gt. 0) then
+         do i = is+1, ie+1
+            myfh(i) = fhfield(i,j,k)
+         enddo
+      else
+         do i = is+1, ie+1
+            myfh(i) = fh
+         enddo
+      endif
+
+      if (ispecies .gt. 2) then
+         if (ifhfield .gt. 0) then
+            do i = is+1, ie+1
+               mydtoh(i) = dtohfield(i,j,k)
+            enddo
+         else
+            do i = is+1, ie+1
+               mydtoh(i) = dtoh
+            enddo
+         endif
+      endif
+
 
       do i = is+1, ie+1
          HI   (i,j,k) = abs(HI   (i,j,k))
@@ -2516,11 +2593,11 @@ c
 !     Correct densities by keeping fractions the same
 
       do i = is+1, ie+1
-         correctH = real(fh*metalfree(i)/totalH(i), RKIND)
+         correctH = real(myfh(i)*metalfree(i)/totalH(i), RKIND)
          HI(i,j,k)  = HI(i,j,k)*correctH
          HII(i,j,k) = HII(i,j,k)*correctH
 
-         correctHe = real((1._DKIND - fh)*
+         correctHe = real((1._DKIND - myfh(i))*
      &        metalfree(i)/totalHe(i), RKIND)
          HeI(i,j,k)   = HeI(i,j,k)*correctHe
          HeII(i,j,k)  = HeII(i,j,k)*correctHe
@@ -2544,7 +2621,8 @@ c
             HDI (i,j,k) = abs(HDI (i,j,k))
             totalD = DI(i,j,k) + DII(i,j,k) +
      &           2._DKIND/3._DKIND*HDI(i,j,k)
-            correctD = real(fh*dtoh*metalfree(i)/totalD, RKIND)
+            correctD = real(myfh(i) * mydtoh(i) * metalfree(i) 
+     &               / totalD, RKIND)
             DI  (i,j,k) = DI (i,j,k)*correctD
             DII (i,j,k) = DII(i,j,k)*correctD
             HDI (i,j,k) = HDI(i,j,k)*correctD

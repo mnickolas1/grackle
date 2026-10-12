@@ -118,6 +118,7 @@ typedef struct
   int h2_optical_depth_approximation;
   int ih2co; // flag for H2 cooling (0-off/1-on)
   int ipiht; // flag for photoionization cooling
+  int ExplicitHydrogenFraction;
   double HydrogenFractionByMass;
   double DeuteriumToHydrogenRatio;
   double SolarMetalFractionByMass;

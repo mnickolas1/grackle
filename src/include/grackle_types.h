@@ -76,6 +76,8 @@ typedef struct
   gr_float *DII_density;
   gr_float *HDI_density;
   gr_float *e_density;
+  gr_float *hydrogen_fraction;
+  gr_float *deuterium_ratio;
   gr_float *metal_density;
   gr_float *dust_density;
 
@@ -90,9 +92,11 @@ typedef struct
   gr_float *temperature_floor;
 
   gr_float *RT_HI_heating_rate;
+  gr_float *RT_H2_heating_rate;
   gr_float *RT_HeI_heating_rate;
   gr_float *RT_HeII_heating_rate;
   gr_float *RT_HI_ionization_rate;
+  gr_float *RT_H2_ionization_rate;
   gr_float *RT_HeI_ionization_rate;
   gr_float *RT_HeII_ionization_rate;
   gr_float *RT_H2_dissociation_rate;

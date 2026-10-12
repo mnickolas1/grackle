@@ -105,6 +105,21 @@ ENTRY(ih2co, INT, 1)
 /* flag for photoionization cooling */
 ENTRY(ipiht, INT, 1)
 
+/* Flag to supply per-cell fields specifying the hydrogen mass fraction and
+ * the deuterium-to-hydrogen mass ratio.
+ * -> when 0 (the default), the scalar HydrogenFractionByMass and
+ *    DeuteriumToHydrogenRatio parameters are used for every cell
+ * -> when 1, the values are read from the hydrogen_fraction and
+ *    deuterium_ratio members of grackle_field_data. The scalar parameters
+ *    are then ignored (they are still normalized at initialization so that
+ *    downstream codes reading them back get a sensible fallback value).
+ *
+ * This requires primordial_chemistry > 0. The tabulated (fully-equilibrium)
+ * mode interpolates tables that were generated for one specific hydrogen
+ * mass fraction, so a spatially varying value is not meaningful there.
+ */
+ENTRY(ExplicitHydrogenFraction, INT, 0)
+
 /* This is initially set to an undefined value. If the user doesn't
  * specify a value, this is subsequently assigned a value based on
  * the value of primordial chemistry:

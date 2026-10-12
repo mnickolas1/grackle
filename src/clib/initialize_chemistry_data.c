@@ -258,6 +258,31 @@ int local_initialize_chemistry_data(chemistry_data *my_chemistry,
   //   - if the user has changed it, the precise handling depends on the choice
   //     of primordial_chemistry
 
+  // - when ExplicitHydrogenFraction is 1, the scalar parameters are only used
+  //   as a fallback for downstream codes that read them back; the values that
+  //   actually enter the solver come from the hydrogen_fraction and
+  //   deuterium_ratio members of grackle_field_data. The normalization below
+  //   is still applied so that the scalars hold a sensible value.
+
+  if (my_chemistry->ExplicitHydrogenFraction != 0 &&
+      my_chemistry->ExplicitHydrogenFraction != 1) {
+    fprintf(stderr, "ERROR: ExplicitHydrogenFraction must be 0 or 1\n");
+    return GR_FAIL;
+  }
+
+  if ((my_chemistry->ExplicitHydrogenFraction == 1) &&
+      (my_chemistry->primordial_chemistry == 0)) {
+    fprintf(stderr,
+            "ERROR: ExplicitHydrogenFraction requires "
+            "primordial_chemistry > 0.\n"
+            " -> the tabulated (primordial_chemistry == 0) mode interpolates\n"
+            "    cooling tables that were generated for a single, fixed\n"
+            "    hydrogen mass fraction, so a spatially varying value is not\n"
+            "    meaningful. Set ExplicitHydrogenFraction to 0 to fall back\n"
+            "    on the scalar HydrogenFractionByMass parameter.\n");
+    return GR_FAIL;
+  }
+
   if (my_chemistry->HydrogenFractionByMass > 1) {
     fprintf(stderr, "ERROR: HydrogenFractionByMass cannot exceed 1.0\n");
     return GR_FAIL;

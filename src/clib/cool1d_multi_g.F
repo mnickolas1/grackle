@@ -32,7 +32,9 @@
      &                gammaha_eff, gasgr_tdust, regr,
      &                iradshield, avgsighi, avgsighei, avgsigheii,
      &                k24, k26, 
-     &                iradtrans, irt_honly, photogammaHI, photogammaHeI, photogammaHeII,
+     &                iradtrans, irt_honly, 
+     &                photogammaHI, photogammaH2I, 
+     &                photogammaHeI, photogammaHeII,
      &                ih2optical, iciecool, ciecoa, cieco,
      &                icmbTfloor, iClHeat, clEleFra,
      &                priGridRank, priGridDim,
@@ -89,7 +91,8 @@
      &        DI(in,jn,kn),  DII(in,jn,kn), HDI(in,jn,kn),
      &        metal(in,jn,kn), dust(in,jn,kn),
      &        Vheat(in,jn,kn), Mheat(in,jn,kn), Tfloor(in,jn,kn),
-     &        photogammaHI(in,jn,kn), photogammaHeI(in,jn,kn), photogammaHeII(in,jn,kn), 
+     &        photogammaHI(in,jn,kn), photogammaH2I(in,jn,kn), 
+     &        photogammaHeI(in,jn,kn), photogammaHeII(in,jn,kn), 
      &        isrf_habing(in,jn,kn)
       real*8  hyd01ka(nratec), h2k01a(nratec), vibha(nratec), 
      &        rotha(nratec), rotla(nratec), gpldla(nratec),
@@ -828,7 +831,7 @@ c  new (correct) way: (april 4, 2007)
 !
 !     Better self-shielding in HI using Eq. 13 and 14 from
 !     Rahmati et. al. 2013 (MNRAS, 430, 2427-2445)
-!     approximate self shielding in HeI and HeII
+!     approximate self shielding in HI and HeI
 !
 
         do i = is+1, ie+1
@@ -924,8 +927,8 @@ c  new (correct) way: (april 4, 2007)
 
              edot(i) = edot(i) + real(ipiht, DKIND)*(
      &              piHi * HI (i,j,k)* fSShHI
-     &           + piHeI * HeI(i,j,k)* fSShHeI
-     &           )/dom
+     &            + piHeI * HeI(i,j,k)*0.25_DKIND* fSShHeI
+     &              )/dom
 !
 !          Ignoring HeII heating (HeII heating rate -> 0)
 !
@@ -1070,15 +1073,24 @@ c  new (correct) way: (april 4, 2007)
           do i = is + 1, ie + 1
             if (itmask(i)) then
 
-              edot(i) = edot(i) + real(ipiht, DKIND) * photogammaHI(i,j,k)
-     &                          / coolunit * HI(i,j,k) / dom
+              edot(i) = edot(i) + real(ipiht, DKIND) 
+     &                * photogammaHI(i,j,k)
+     &                / coolunit * HI(i,j,k) / dom
 
               if (irt_honly .eq. 0) then
+                
+                if (ispecies .gt. 1) then
+                  edot(i) = edot(i) + real(ipiht, DKIND) 
+     &                    * photogammaH2I(i,j,k)
+     &                    / coolunit * H2I(i,j,k) / 2.0_DKIND / dom
+                endif
+
                 edot(i) = edot(i)
      &            + real(ipiht, DKIND) * photogammaHeI(i,j,k)
-     &                          / coolunit * HeI(i,j,k) / 4.0_DKIND / dom
+     &            / coolunit * HeI(i,j,k) / 4.0_DKIND / dom
      &            + real(ipiht, DKIND) * photogammaHeII(i,j,k)
-     &                          / coolunit * HeII(i,j,k) / 4.0_DKIND / dom
+     &            / coolunit * HeII(i,j,k) / 4.0_DKIND / dom
+
               endif
 
               if (edot(i) .ne. edot(i)) then
